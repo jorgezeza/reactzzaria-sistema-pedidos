@@ -2,7 +2,7 @@
 
 ## Configurações padrão para variáveis de ambiente
 
-Crie um arquivo `.env.local` na raiz da sua aplicação, com as seguintes variáveis
+Crie um arquivo `.env,local` na raiz da sua aplicação, com as seguintes variáveis
 
 As variáveis que pedem chaves são de uma aplicação criada com o Firebase
 
