@@ -9,7 +9,7 @@ import {
 } from '@material-ui/core'
 import {
   CardLink,
-  Content,
+  Content as MaterialContent,
   Divider,
   Footer,
   H4,
@@ -19,6 +19,7 @@ import {
 import { singularOrPlural, toMoney } from 'utils'
 import { HOME, CHOOSE_PIZZA_QUANTITY } from 'routes'
 import { useCollection } from 'hooks'
+import ShoppingCart from 'ui/shoppingCart'
 
 const ChoosePizzaFlavours = ({ location }) => {
   const [checkboxes, setCheckboxes] = useState(() => ({}))
@@ -39,7 +40,6 @@ const ChoosePizzaFlavours = ({ location }) => {
   const { flavours, id } = location.state.pizzaSize
 
   const handleChangeCheckbox = (pizzaId) => (e) => {
-    console.log('checkboxes', checkboxes)
     if (
       checkboxesChecked(checkboxes).length === flavours &&
       e.target.checked === true
@@ -65,29 +65,34 @@ const ChoosePizzaFlavours = ({ location }) => {
           </H4>
         </HeaderContent>
 
-        <PizzasGrid>
-          {pizzasFlavours.map((pizza) => (
-            <Grid item key={pizza.id} xs>
-              <Card checked={!!checkboxes[pizza.id]}>
-                <Label>
-                  <Checkbox
-                    checked={!!checkboxes[pizza.id]}
-                    onChange={handleChangeCheckbox(pizza.id)}
-                  />
+        <SectionWrapper>
+          <PizzasGrid>
+            {pizzasFlavours.map((pizza) => (
+              <Grid item key={pizza.id} xs>
+                <Card checked={!!checkboxes[pizza.id]}>
+                  <Label>
+                    <Checkbox
+                      checked={!!checkboxes[pizza.id]}
+                      onChange={handleChangeCheckbox(pizza.id)}
+                    />
 
-                  <Img src={pizza.image} alt={pizza.name} />
+                    <Img src={pizza.image} alt={pizza.name} />
 
-                  <Divider />
+                    <Divider />
 
-                  <Typography>{pizza.name}</Typography>
-                  <Typography variant='h5'>
-                    {toMoney(pizza.value[id])}
-                  </Typography>
-                </Label>
-              </Card>
-            </Grid>
-          ))}
-        </PizzasGrid>
+                    <Typography>{pizza.name}</Typography>
+                    <Typography variant='h5'>
+                      {toMoney(pizza.value[id])}
+                    </Typography>
+                  </Label>
+                </Card>
+              </Grid>
+            ))}
+          </PizzasGrid>
+
+        </SectionWrapper>
+
+        <ShoppingCart />
       </Content>
 
       <Footer
@@ -101,7 +106,7 @@ const ChoosePizzaFlavours = ({ location }) => {
               pathname: CHOOSE_PIZZA_QUANTITY,
               state: {
                 ...location.state,
-                pizzaFlavours: getFlavoursNameAndId({ checkboxes, pizzasFlavours })
+                pizzaFlavours: getFlavoursNameAndId({ checkboxes, pizzasFlavours }, id)
               }
             },
             children: 'Quantas pizzas?',
@@ -121,19 +126,33 @@ function checkboxesChecked (checkboxes) {
   return Object.values(checkboxes).filter(Boolean)
 }
 
-function getFlavoursNameAndId ({ checkboxes, pizzasFlavours }) {
+function getFlavoursNameAndId ({ checkboxes, pizzasFlavours }, idPrice) {
   return Object.entries(checkboxes)
     .filter(([, value]) => !!value)
     .map(([id]) => ({
       id,
-      name: pizzasFlavours.find((flavour) => flavour.id === id).name
+      name: pizzasFlavours.find((flavour) => flavour.id === id).name,
+      price: getPrice(pizzasFlavours, id, idPrice)
     }))
+}
+
+const getPrice = (pizzasFlavours, id, idPrice) => {
+  let priceValue = 0
+  pizzasFlavours.find((pizza) => pizza.id === id ? (priceValue = pizza.value[idPrice]) : priceValue)
+  return priceValue
 }
 
 const Card = styled(MaterialCard)`
   && {
     border: 2px solid transparent;
     border-color: ${({ theme, checked }) => checked ? theme.palette.secondary.light : ''};
+  }
+`
+
+const Content = styled(MaterialContent)`
+  && {
+    position: relative;
+    max-width: 100%;
   }
 `
 
@@ -149,6 +168,11 @@ const Checkbox = styled.input.attrs({
 
 const Img = styled.img`
   width: 200px;
+`
+
+const SectionWrapper = styled.section`
+  display: grid;
+  grid-template-columns: 3fr 1fr;
 `
 
 export default ChoosePizzaFlavours

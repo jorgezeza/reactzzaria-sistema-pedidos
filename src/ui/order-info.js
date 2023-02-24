@@ -13,7 +13,6 @@ import { singularOrPlural } from 'utils'
 
 function OrderInfo ({ showOptions }) {
   const { order, removePizzaFromOrder } = useOrder()
-  console.log('order:', order)
 
   return (
     <List>

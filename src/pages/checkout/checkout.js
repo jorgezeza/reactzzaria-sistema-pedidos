@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { Link, Redirect } from 'react-router-dom'
 import {
@@ -19,6 +19,25 @@ import { useOrder } from 'hooks'
 
 function Checkout () {
   const { order, addAddress, addPhone } = useOrder()
+  const [enableOrDisable, setEnableOrDisable] = useState(true)
+
+  useEffect(() => {
+    let isAddress = false
+    let isPhone = false
+
+    Object.entries(order).forEach((valueOBJ) => {
+      const firstItemOfArrayAddress = valueOBJ[0]
+      const secondItemOfArrayAddress = valueOBJ[1]
+
+      if (firstItemOfArrayAddress === 'address') {
+        isAddress = !Object.values(secondItemOfArrayAddress).includes('')
+      }
+      if (firstItemOfArrayAddress === 'phone') {
+        isPhone = secondItemOfArrayAddress.length >= 14
+      }
+    })
+    setEnableOrDisable(!(isAddress && isPhone))
+  }, [order])
 
   if (!order.pizzas.length) {
     return <Redirect to={HOME} />
@@ -48,13 +67,13 @@ function Checkout () {
           </Grid>
         </Grid>
       </Content>
-
       <FooterCheckout>
         <Button
           variant='contained'
           color='primary'
           component={Link}
           to={CHECKOUT_CONFIRMATION}
+          disabled={enableOrDisable}
         >
           Confirmar pedido
         </Button>

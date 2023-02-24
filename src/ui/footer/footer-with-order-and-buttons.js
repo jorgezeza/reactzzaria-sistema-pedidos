@@ -16,8 +16,6 @@ function FooterWithOrderAndButtons ({ buttons, history, location }) {
   const { pizzaSize, pizzaFlavours } = location.state
   const { flavours, name, slices } = pizzaSize
 
-  console.log('pizzaFlavours:', pizzaFlavours)
-
   return (
     <Grid container>
       <OrderContainer>

@@ -9,6 +9,7 @@ const Title = styled(Typography).attrs({
 
 export const H3 = (props) => <Title variant='h3' {...props} />
 export const H4 = (props) => <Title variant='h4' {...props} />
+export const H5 = (props) => <Title variant='h5' {...props} />
 export const H6 = (props) => <Typography variant='h6' {...props} />
 
 export default Title

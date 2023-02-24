@@ -30,13 +30,14 @@ function OrderProvider ({ children }) {
   }
 
   function removePizzaFromOrder (id) {
-    console.log('removePizzaFromOrder:', id)
     addPizza((pizzas) => pizzas.filter(p => p.id !== id))
   }
 
-  async function sendOrder () {
-    console.log('send order')
+  console.log('PIZZAS', pizzas)
+  console.log('ENDEREÇO', address)
+  console.log('TELEFONE', phone)
 
+  async function sendOrder () {
     try {
       await db.collection('orders').add({
         userId: userInfo.user.uid,
@@ -47,6 +48,7 @@ function OrderProvider ({ children }) {
         pizzas: pizzas.map(pizza => ({
           size: pizza.pizzaSize,
           flavours: pizza.pizzaFlavours,
+          price: pizza.pizzaFlavours.values,
           quantity: pizza.quantity
         }))
       })

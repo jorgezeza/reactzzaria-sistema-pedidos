@@ -1,17 +1,104 @@
 import React, { useState, useEffect, useReducer, useRef } from 'react'
 import t from 'prop-types'
 import {
+  Button,
   CircularProgress,
-  Grid
+  Grid,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@material-ui/core'
 import TextField from './text-field'
 
-function FormAddress ({ onUpdate = () => {} }) {
+function FormAddress ({ onUpdate = () => { } }) {
   const [cep, setCep] = useState('')
   const [fetchingCep, setFetchingCep] = useState(false)
   const [addressState, dispatch] = useReducer(reducer, initialState)
   const numberField = useRef()
   const addressField = useRef()
+
+  const [open, setOpen] = useState(false)
+
+  const fields = [
+    {
+      label: 'Rua',
+      xs: 9,
+      name: 'address',
+      inputRef: addressField
+    },
+
+    {
+      label: 'Número',
+      xs: 3,
+      name: 'number',
+      inputRef: numberField
+    },
+
+    {
+      label: 'Bairro',
+      xs: 12,
+      name: 'district'
+    },
+
+    {
+      label: 'Complemento',
+      xs: 12,
+      name: 'complement'
+    },
+
+    {
+      label: 'Cidade',
+      xs: 9,
+      name: 'city'
+    },
+
+    {
+      label: 'Estado',
+      xs: 3,
+      name: 'state'
+    }
+  ]
+
+  const CEPModalError = () => {
+    // https://mui.com/material-ui/react-dialog/#alerts
+    const toDeny = () => {
+      setCep('')
+      setOpen(false)
+    }
+
+    const toAccept = () => {
+      dispatch({
+        type: 'FAILED_BUT_ACCEPTED',
+        payload: { name: 'code', value: cep }
+      })
+      setOpen(false)
+    }
+    return (
+      <div>
+        <Dialog
+          open={open}
+          onClose={toDeny}
+          aria-labelledby='alert-dialog-title'
+          aria-describedby='alert-dialog-description'
+        >
+          <DialogTitle id='alert-dialog-title'>
+            CEP não encontrado !
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id='alert-dialog-description'>
+              Deseja utilizar esse CEP ?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={toDeny}>Não</Button>
+            <Button onClick={toAccept} autoFocus>Sim</Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+    )
+  }
 
   useEffect(() => {
     onUpdate(addressState)
@@ -22,8 +109,6 @@ function FormAddress ({ onUpdate = () => {} }) {
       if (cep.length < 9) {
         return
       }
-
-      console.log('buscar cep:', cep)
 
       setFetchingCep(true)
       const data = await fetch(`https://apps.widenet.com.br/busca-cep/api/cep/${cep}.json`)
@@ -36,7 +121,6 @@ function FormAddress ({ onUpdate = () => {} }) {
       }
 
       const result = await data.json()
-      console.log(result)
 
       if (!result.ok) {
         dispatch({
@@ -45,6 +129,7 @@ function FormAddress ({ onUpdate = () => {} }) {
             error: result.message
           }
         })
+        setOpen(true)
         return
       }
 
@@ -55,7 +140,6 @@ function FormAddress ({ onUpdate = () => {} }) {
 
       numberField.current.focus()
     }
-
     fetchAddress()
   }, [cep])
 
@@ -80,61 +164,33 @@ function FormAddress ({ onUpdate = () => {} }) {
   }
 
   return (
-    <Grid container spacing={2} alignItems='center'>
-      <TextField
-        label='CEP'
-        xs={4}
-        autoFocus
-        value={cep}
-        onChange={handleChangeCep}
-        error={!!addressState.error}
-      />
-      <Grid item xs={8}>
-        {fetchingCep && <CircularProgress size={20} />}
-      </Grid>
-
-      {[
-        {
-          label: 'Rua',
-          xs: 9,
-          name: 'address',
-          inputRef: addressField
-        },
-
-        {
-          label: 'Número',
-          xs: 3,
-          name: 'number',
-          inputRef: numberField
-        },
-
-        {
-          label: 'Complemento',
-          xs: 12,
-          name: 'complement'
-        },
-
-        {
-          label: 'Cidade',
-          xs: 9,
-          name: 'city'
-        },
-
-        {
-          label: 'Estado',
-          xs: 3,
-          name: 'state'
-        }
-      ].map((field) => (
+    <>
+      <CEPModalError />
+      <Grid container spacing={2} alignItems='center'>
         <TextField
-          {...field}
-          key={field.name}
-          value={addressState[field.name]}
-          onChange={handleChangeField}
-          disabled={fetchingCep}
+          label='CEP'
+          xs={4}
+          autoFocus
+          value={cep}
+          onChange={handleChangeCep}
+          error={!!addressState.error}
         />
-      ))}
-    </Grid>
+        <Grid item xs={8}>
+          {fetchingCep && <CircularProgress size={20} />}
+        </Grid>
+
+        {fields.map((field) => (
+          <TextField
+            {...field}
+            key={field.name}
+            value={addressState[field.name]}
+            onChange={handleChangeField}
+            autoFocus={field.autoFocus}
+            disabled={fetchingCep}
+          />
+        ))}
+      </Grid>
+    </>
   )
 }
 
@@ -143,7 +199,6 @@ FormAddress.propTypes = {
 }
 
 function reducer (state, action) {
-  console.log('action:', action)
   if (action.type === 'UPDATE_FULL_ADDRESS') {
     return {
       ...state,
@@ -163,6 +218,13 @@ function reducer (state, action) {
     return {
       ...initialState,
       error: action.payload.error
+    }
+  }
+
+  if (action.type === 'FAILED_BUT_ACCEPTED') {
+    return {
+      ...state,
+      [action.payload.name]: action.payload.value
     }
   }
 
